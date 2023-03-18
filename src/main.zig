@@ -12,13 +12,7 @@ pub fn main() void {
     defer raylib.CloseWindow();
 
     while (!raylib.WindowShouldClose()) {
-        raylib.BeginDrawing();
-        defer raylib.EndDrawing();
-        
-        raylib.ClearBackground(raylib.WHITE);
-        raylib.DrawFPS(10, 10);
-
-        
+        updateDrawGame();
     }
 }
 
@@ -56,12 +50,62 @@ fn initGame() void {
 
 fn updateGame() void {
     if(!globals.gameOver) {
-        if(raylib.IsKeyPressed('P')) globals.pause = !globals.pause;
+        if(raylib.IsKeyPressed(raylib.KeyboardKey.KEY_P)) globals.pause = !globals.pause;
 
         if(!globals.pause) {
             // Player logic: 
-            if(raylib.IsKeyDown(raylib.KeyboardKey.KEY_LEFT)) globals.player.rotation -= 5;
+            globals.player.update();
+            for(&globals.shots) |*shot| {
+                if(shot.active) shot.update();
+            }
+            for(&globals.bigMeteors) |*meteor| {
+                if(meteor.active) meteor.update();
+            }
+            for(&globals.mediumMeteors) |*meteor| {
+                if(meteor.active) meteor.update();
+            }
+            for(&globals.smallMeteors) |*meteor| {
+                if(meteor.active) meteor.update();
+            }
+            
+            // meteors vs. shots
+            // for(&globals.shots) |*shot| {
 
+            // }
+        }
+    } else {
+        if(raylib.IsKeyPressed(raylib.KeyboardKey.KEY_SPACE)) {
+            initGame();
+            globals.gameOver = false;
         }
     }
+}
+
+fn drawGame() void {
+    raylib.BeginDrawing();
+    defer raylib.EndDrawing();
+    raylib.ClearBackground(raylib.WHITE);
+    if(!globals.gameOver) {
+        // draw ship
+        const pos = globals.player.position;
+        const rot = globals.player.rotation * raylib.DEG2RAD;
+        const v1 = raylib.Vector2 {
+            .x = pos.x + math.sin(rot)*globals.shipHeight,
+            .y = pos.y - math.cos(rot)*globals.shipHeight
+        };
+        const v2 = raylib.Vector2 {
+            .x = pos.x - math.cos(rot)*(globals.playerBaseSize/2),
+            .y = pos.y - math.sin(rot)*(globals.playerBaseSize/2),
+        };
+        const v3 = raylib.Vector2 {
+            .x = pos.x + math.cos(rot)*(globals.playerBaseSize/2),
+            .y = pos.y + math.sin(rot)*(globals.playerBaseSize/2)
+        };
+        raylib.DrawTriangle(v1, v2, v3, raylib.MAROON);
+    }
+}
+
+fn updateDrawGame() void {
+    updateGame();
+    drawGame();
 }

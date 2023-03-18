@@ -70,20 +70,34 @@ pub const Player = struct {
 
         // shooting logic
         if(raylib.IsKeyPressed(raylib.KeyboardKey.KEY_SPACE)) {
-            for(globals.shots) |shot| {
+            for(&globals.shots) |*shot| {
                 if(!shot.active) {
                     shot.position = .{
-                        self.position.x + math.sin(self.rotation * raylib.DEG2RAD)*globals.shipHeight,
-                        self.position.y - math.cos(self.rotation * raylib.DEG2RAD)*globals.shipHeight
+                        .x = self.position.x + math.sin(self.rotation * raylib.DEG2RAD)*globals.shipHeight,
+                        .y = self.position.y - math.cos(self.rotation * raylib.DEG2RAD)*globals.shipHeight
                     };
                     shot.active = true;
                     shot.speed = .{
-                        1.5*math.sin(self.rotation * raylib.DEG2RAD)*globals.playerSpeed,
-                        1.5*math.cos(self.rotation * raylib.DEG2RAD)*globals.playerSpeed
+                        .x = 1.5*math.sin(self.rotation * raylib.DEG2RAD)*globals.playerSpeed,
+                        .y = 1.5*math.cos(self.rotation * raylib.DEG2RAD)*globals.playerSpeed
                     };
                     shot.rotation = self.rotation;
                 }
             }
+        }
+    }
+
+    pub fn checkMeteorCollisions(self: @This()) void {
+        const actCollider = self.collider();
+
+        for(globals.bigMeteors) |meteor| {
+            if(raylib.CheckCollisionCircles(.{.x = actCollider.x, .y = actCollider.y}, actCollider.z, meteor.position, meteor.radius) and meteor.active) globals.gameOver = true;
+        }
+        for(globals.mediumMeteors) |meteor| {
+            if(raylib.CheckCollisionCircles(.{.x = actCollider.x, .y = actCollider.y}, actCollider.z, meteor.position, meteor.radius) and meteor.active) globals.gameOver = true;
+        }
+        for(globals.smallMeteors) |meteor| {
+            if(raylib.CheckCollisionCircles(.{.x = actCollider.x, .y = actCollider.y}, actCollider.z, meteor.position, meteor.radius) and meteor.active) globals.gameOver = true;
         }
     }
 };
@@ -104,6 +118,35 @@ pub const Shoot = struct {
         self.active = false;
         self.lifeSpan = 0;
         self.color = raylib.WHITE;
+    }
+
+    pub fn update(self: *@This()) void {
+        if(self.active) {
+            // life timer
+            self.lifeSpan += 1;
+
+            // logic
+            self.position.x += self.speed.x;
+            self.position.y -= self.speed.y;
+
+            if(
+                self.position.x > globals.screenWidth + self.radius
+            or  self.position.x < 0 - self.radius
+            or  self.position.y > globals.screenHeight + self.radius
+            or  self.position.y < 0 - self.radius
+                ) {
+                self.active = false;
+                self.lifeSpan = 0;
+            }
+
+            // life
+            if(self.lifeSpan >= 60) {
+                self.position = .{.x = 0, .y = 0};
+                self.speed = .{.x = 0, .y = 0};
+                self.lifeSpan = 0;
+                self.active = false;
+            }
+        }
     }
 };
 
@@ -165,5 +208,16 @@ pub const Meteor = struct {
         self.radius = radius;
         self.active = false;
         self.color = raylib.BLUE;
+    }
+
+    pub fn update(self: *@This()) void {
+        self.position.x += self.speed.x;
+        self.position.y -= self.speed.y;
+
+        // collision logic vs. wall
+        if(self.position.x > globals.screenWidth + self.radius) self.position.x = -self.radius;
+        if(self.position.x < 0 - self.radius) self.position.x = globals.screenWidth + self.radius;
+        if(self.position.y > globals.screenHeight + self.radius) self.position.y = -self.radius;
+        if(self.position.y < 0 - self.radius) self.position.y = globals.screenHeight + self.radius;
     }
 };
