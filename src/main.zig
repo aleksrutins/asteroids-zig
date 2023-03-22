@@ -3,6 +3,7 @@ const math = std.math;
 
 const raylib = @import("raylib");
 const globals = @import("globals.zig");
+const types = @import("types.zig");
 
 pub fn main() void {
     raylib.InitWindow(globals.screenWidth, globals.screenHeight, "hello world!");
@@ -68,9 +69,15 @@ fn updateGame() void {
                 if(meteor.active) meteor.update();
             }
             
-            // meteors vs. shots
+            globals.player.checkMeteorCollisions();
+            
+            //meteors vs. shots
             // for(&globals.shots) |*shot| {
+            //     if(shot.active) {
+            //         for(&globals.bigMeteors) |*meteor| {
 
+            //         }
+            //     }
             // }
         }
     } else {
@@ -83,8 +90,8 @@ fn updateGame() void {
 
 fn drawGame() void {
     raylib.BeginDrawing();
-    defer raylib.EndDrawing();
     raylib.ClearBackground(raylib.WHITE);
+    raylib.DrawFPS(10, 10);
     if(!globals.gameOver) {
         // draw ship
         const pos = globals.player.position;
@@ -102,6 +109,35 @@ fn drawGame() void {
             .y = pos.y + math.sin(rot)*(globals.playerBaseSize/2)
         };
         raylib.DrawTriangle(v1, v2, v3, raylib.MAROON);
+
+        // draw meteors
+        for(globals.bigMeteors) |meteor| {
+            drawMeteor(meteor);
+        }
+        for(globals.mediumMeteors) |meteor| {
+            drawMeteor(meteor);
+        }
+        for(globals.smallMeteors) |meteor| {
+            drawMeteor(meteor);
+        }
+
+        // draw shots
+        for(globals.shots) |shot| {
+            if(shot.active) {
+                raylib.DrawCircleV(shot.position, shot.radius, shot.color);
+            }
+        }
+    } else {
+        raylib.DrawText("PRESS [ENTER] TO PLAY AGAIN", @divFloor(raylib.GetScreenWidth(), 2) - @divFloor(raylib.MeasureText("PRESS [ENTER] TO PLAY AGAIN", 20), 2), @divFloor(raylib.GetScreenHeight(), 2) - 50, 20, raylib.GRAY);
+    }
+    raylib.EndDrawing();
+}
+
+fn drawMeteor(meteor: types.Meteor) void {
+    if(meteor.active) {
+        raylib.DrawCircleV(meteor.position, meteor.radius, meteor.color);
+    } else {
+        raylib.DrawCircleV(meteor.position, meteor.radius, raylib.Fade(raylib.LIGHTGRAY, 0.3));
     }
 }
 

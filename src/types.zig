@@ -38,6 +38,7 @@ pub const Player = struct {
 
         // speed
         self.speed.x = math.sin(self.rotation * raylib.DEG2RAD) * globals.playerSpeed;
+        self.speed.y = math.cos(self.rotation * raylib.DEG2RAD) * globals.playerSpeed;
 
         // acceleration
         if(raylib.IsKeyDown(raylib.KeyboardKey.KEY_UP)) {
@@ -82,6 +83,7 @@ pub const Player = struct {
                         .y = 1.5*math.cos(self.rotation * raylib.DEG2RAD)*globals.playerSpeed
                     };
                     shot.rotation = self.rotation;
+                    break;
                 }
             }
         }
@@ -109,7 +111,7 @@ pub const Shoot = struct {
     rotation: f32 = 0,
     lifeSpan: i32 = 0,
     active: bool = false,
-    color: Color = raylib.WHITE,
+    color: Color = raylib.BLACK,
 
     pub fn init(self: *@This()) void {
         self.position = Vector2.zero();
@@ -117,7 +119,7 @@ pub const Shoot = struct {
         self.radius = 2;
         self.active = false;
         self.lifeSpan = 0;
-        self.color = raylib.WHITE;
+        self.color = raylib.BLACK;
     }
 
     pub fn update(self: *@This()) void {
@@ -199,7 +201,7 @@ pub const Meteor = struct {
         self.speed = .{.x = velx, .y = vely};
         self.radius = 40;
         self.active = true;
-        self.color = raylib.BLUE;
+        self.color = raylib.DARKGRAY;
     }
 
     pub fn init(self: *@This(), radius: f32) void {
@@ -207,7 +209,7 @@ pub const Meteor = struct {
         self.speed = .{.x = 0, .y = 0};
         self.radius = radius;
         self.active = false;
-        self.color = raylib.BLUE;
+        self.color = raylib.GRAY;
     }
 
     pub fn update(self: *@This()) void {
